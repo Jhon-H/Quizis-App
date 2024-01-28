@@ -1,4 +1,5 @@
 import express, { type Router } from 'express'
+import helmet from 'helmet'
 
 interface Options {
   port: number
@@ -19,6 +20,7 @@ export class Server {
     this.app.use(express.json())
 
     this.app.use(this.routes)
+    this.app.use(helmet())
 
     this.app.listen(this.port, () => {
       console.log(`Server is listening on port ${this.port}`)

@@ -9,9 +9,8 @@ export class QuestionsRouter {
 
     router.get('/', controller.get)
     router.post('/', AuthMiddleware.validateJWT, controller.create)
-    router.put('/:questionId', AuthMiddleware.validateJWT, controller.update)
-    router.get('/validate', controller.validate)
-    router.get('/validate-multiple', controller.validateMultiple)
+    // router.put('/:questionId', AuthMiddleware.validateJWT, controller.update)
+    router.post('/validate', controller.validate)
 
     return router
   }
