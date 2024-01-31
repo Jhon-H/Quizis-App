@@ -2,7 +2,6 @@ import { AppRouter } from './presentation/routes'
 import { envs } from './config/envs.adapter'
 import { MongoDatabase } from './data/mongo/init'
 import { Server } from './presentation/server'
-import { UserModel } from './data/mongo/models/user.model'
 
 // eslint-disable-next-line @typescript-eslint/no-floating-promises
 ;(async () => {

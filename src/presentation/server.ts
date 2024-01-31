@@ -1,5 +1,6 @@
 import express, { type Router } from 'express'
 import helmet from 'helmet'
+import { swaggerDocs } from '../docs/init'
 
 interface Options {
   port: number
@@ -24,6 +25,7 @@ export class Server {
 
     this.app.listen(this.port, () => {
       console.log(`Server is listening on port ${this.port}`)
+      swaggerDocs(this.app, this.port)
     })
   }
 }

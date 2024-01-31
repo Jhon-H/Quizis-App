@@ -1,0 +1,368 @@
+openapi: 3.0.0
+
+info:
+  title: Quizis API
+  description: API para crear preguntas y validar las respuesta correctas
+  version: 0.0.1
+  contact:
+    name: Jhon Hernandez
+
+servers:
+  - url: http://localhost:{port}/api
+    description: Local server API
+    variables:
+      port:
+        enum:
+          - '3000'
+          - '3001'
+          - '4000'
+        default: '3000'
+
+paths:
+  /auth/login:
+    post:
+      summary: Login con email y password
+      tags:
+        - auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                      user:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+
+  /auth/register:
+    post:
+      summary: Registar nuevos usuarios
+      tags:
+        - auth
+      parameters:
+        - in: header
+          name: x-admin-token
+          description: Token de administrador para crear nuevos usuarios
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  format: password
+                confirmPassword:
+                  type: string
+                  format: password
+
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: 
+                type: object
+                properties:
+                  name:
+                    type: string
+                  id:
+                    $ref: '#/components/schemas/MongoId'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+  /answer:
+    post:
+      summary: Crear nuevas respuestas
+      tags:
+        - answer
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  description:
+                    type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    default: OK
+                  data:
+                    type: object
+                    properties:
+                      answers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Answer'
+                      answersIds:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              $ref: '#/components/schemas/MongoId'
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+  /questions:
+    get:
+      summary: Obtener lista de preguntas
+      tags:
+        - question
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    default: OK
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Question'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+    post:
+      summary: Crear nueva pregunta
+      tags:
+        - question
+      security:
+        - BearerAuth: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                description:
+                  type: string
+                answers:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/MongoId'
+                  minItems: 2
+                  maxItems: 10
+                answer:
+                  $ref: '#/components/schemas/MongoId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    default: OK
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        $ref: '#/components/schemas/MongoId'
+                      title:
+                        type: string
+                      numberOfAnswers:
+                        type: integer
+        '401':
+          $ref: '#/components/responses/401Unauthorized'
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+  /questions/validate:
+    post:
+      summary: validar una lista de preguntas
+      tags:
+        - question
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                questionId:
+                  type: string
+                selectedAnswerId:
+                  type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    default: OK
+                  data:
+                    type: object
+                    properties:
+                      question:
+                        $ref: '#/components/schemas/Question'
+                      selectedAnswer:
+                        $ref: '#/components/schemas/Answer'
+                      isCorrect:
+                        type: boolean
+        '400':
+          $ref: '#/components/responses/400BadRequest'
+        '500':
+          $ref: '#/components/responses/500InteralError'
+
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  responses:
+    400BadRequest:
+      description: Bad request body 
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    500InteralError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+    401Unauthorized:
+      description: Unauthorized for this operation
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message:
+                type: string
+  schemas:
+    Answer:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        id:
+          $ref: '#/components/schemas/MongoId'
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+    Question:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        answers:
+          type: array
+          items:
+            $ref: '#/components/schemas/MongoId'
+        correctAnswerId:
+          $ref: '#/components/schemas/MongoId'
+        createdAt:
+          type: string
+          format: date
+        updatedAt:
+          type: string
+          format: date
+    MongoId:
+      type: string
+      format: mongoId
+      pattern: '^[0-9a-fA-F]{24}$'
