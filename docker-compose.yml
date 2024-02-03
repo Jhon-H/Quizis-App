@@ -1,12 +1,30 @@
 version: '3.9'
 
 services:
-  quizis-app:
-    build: .
+  quizis-app-production:
+    build:
+      context: .
+      target: production
     ports:
       - '3000:3000'
     links:
       - mongo
+  quizis-app-dev:
+    build:
+      context: .
+      target: dev
+      args:
+        - PORT=${PORT}
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - '${PORT}:${PORT}'
+    links:
+      - mongo
+    volumes:
+      - .:/proyect
+      - node_modules:/proyect/node_modules
   mongo:
     image: mongo
     ports:
@@ -18,3 +36,4 @@ services:
       - mongo-data:/data/db
 volumes:
   mongo-data:
+  node_modules:
