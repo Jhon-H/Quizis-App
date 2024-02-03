@@ -2,11 +2,15 @@ version: '3.9'
 
 services:
   quizis-app:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
     ports:
       - '3000:3000'
     links:
       - mongo
+    volumes:
+      - .:/home/app
   mongo:
     image: mongo
     ports:
